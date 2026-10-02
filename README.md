@@ -221,4 +221,25 @@ Alternatively, `--paper-pairs` loads the published annotations when the generate
 
 ## License
 
-The backbones retain their upstream licenses; see [third-party notices](NOTICE.md).
+The code and router checkpoints are subject to the license of the backbone they are used with:
+
+| Setting | Backbone | License |
+|---|---|---|
+| I2V | LingBot-World-v2 | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) |
+| T2V | MiniMax-H3 with RAVEN | [MiniMax-H3 Community License Agreement](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE); RAVEN: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) |
+
+[RememBench](https://huggingface.co/datasets/mosaichunk/RememBench) is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Third-party components are listed in [NOTICE.md](NOTICE.md).
+
+## Citation
+
+```bibtex
+@misc{zhang2026mosaichunkcompositingspatiotemporalmemory,
+      title={MosaiChunk: Compositing Spatio-Temporal Memory for Autoregressive Video Generation},
+      author={Yiwen Zhang and Haocheng Xi and Michael Tian-Yue Liu and Alexei A. Efros and Hadar Averbuch-Elor and Qianqian Wang and Haiwen Feng},
+      year={2026},
+      eprint={2610.02153},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2610.02153},
+}
+```
