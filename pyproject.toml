@@ -1,0 +1,12 @@
+[project]
+name = "mosaichunk"
+version = "0.1.0"
+description = "Composing Spatio-Temporal Memory for Autoregressive Video Generation"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 100
+exclude = ["third_party"]
+
+[tool.ruff.lint]
+select = ["F", "I"]
