@@ -1,0 +1,14 @@
+{
+  "raven": {
+    "url": "https://github.com/mvp-ai-lab/RAVEN.git",
+    "revision": "5a71a3cb0588ce2a9696ac23af6c78ac3f9929f3"
+  },
+  "pi3": {
+    "url": "https://github.com/yyfz/Pi3.git",
+    "revision": "9fa3ddb3f8d53041f8b2738df404f62223bbaa7b"
+  },
+  "lingbot": {
+    "url": "https://github.com/robbyant/lingbot-world-v2.git",
+    "revision": "94f43115de8d4a4f9f282126528c300a0b232c5f"
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "teaser": "https://mosaichunk.github.io/assets/figures/teaser.html",
+  "previews": {
+    "t2v-beetle": {
+      "video": "t2v-beetle.mp4",
+      "scene": "R0215_draw_insect",
+      "original_sha256": "474e2304189766741105b3f3d9518ca73b5758b3605d02edce70ed5ca15956c4",
+      "video_sha256": "474e2304189766741105b3f3d9518ca73b5758b3605d02edce70ed5ca15956c4",
+      "geometry": {
+        "width": 1376,
+        "height": 768,
+        "fps": 24.0,
+        "frames": 379
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "extent": "Complete original rollout, frames 0 through 378 inclusive",
+      "video_duration": 15.791666666666666,
+      "departure_frame": 43,
+      "revisit_frame": 307,
+      "preview_speed": 3,
+      "preview_width": 640,
+      "preview_fps": 30,
+      "preview_frames": 158,
+      "preview_duration": 5.267,
+      "preview_format": "animated WebP",
+      "preview_timing": "Shared 5.267-second normalized timeline; first and last source frames included; all panels and progress bars restart together",
+      "preview_image": "readme-synchronized.webp",
+      "preview_panel": {
+        "row": 0,
+        "column": 0
+      }
+    },
+    "t2v-01": {
+      "video": "t2v-01.mp4",
+      "scene": "R0027_case_thimble",
+      "original_sha256": "817b2583d29bef23dfd2aabfc05cd34302e03cb223f1fbb83f947a34ee7542fd",
+      "video_sha256": "817b2583d29bef23dfd2aabfc05cd34302e03cb223f1fbb83f947a34ee7542fd",
+      "geometry": {
+        "width": 1376,
+        "height": 768,
+        "fps": 24.0,
+        "frames": 379
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "extent": "Complete original rollout, frames 0 through 378 inclusive",
+      "video_duration": 15.791666666666666,
+      "departure_frame": 51,
+      "revisit_frame": 319,
+      "preview_speed": 3,
+      "preview_width": 640,
+      "preview_fps": 30,
+      "preview_frames": 158,
+      "preview_duration": 5.267,
+      "preview_format": "animated WebP",
+      "preview_timing": "Shared 5.267-second normalized timeline; first and last source frames included; all panels and progress bars restart together",
+      "preview_image": "readme-synchronized.webp",
+      "preview_panel": {
+        "row": 0,
+        "column": 1
+      }
+    },
+    "i2v-01": {
+      "video": "i2v-01.mp4",
+      "original_sha256": "1f642f25e8d3242ef0556e61ffa68b228247d5db15dde457533812d70c7c218c",
+      "geometry": {
+        "width": 832,
+        "height": 480,
+        "fps": 16.0,
+        "frames": 253
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "preview_speed": 3,
+      "preview_width": 640,
+      "preview_fps": 30,
+      "preview_frames": 158,
+      "preview_timing": "Shared 5.267-second normalized timeline; first and last source frames included; all panels and progress bars restart together",
+      "preview_format": "animated WebP",
+      "preview_duration": 5.267,
+      "original_geometry": {
+        "width": 832,
+        "height": 480,
+        "fps": 16.0,
+        "frames": 253
+      },
+      "website_scene": "i2v-01",
+      "trim": {
+        "source_departure_frame": 0,
+        "source_revisit_frame": 252,
+        "inclusive": true,
+        "annotation_source": "https://mosaichunk.github.io/viewer/assets/scenes.js"
+      },
+      "departure_frame": 0,
+      "revisit_frame": 252,
+      "video_sha256": "1f642f25e8d3242ef0556e61ffa68b228247d5db15dde457533812d70c7c218c",
+      "video_duration": 15.8125,
+      "preview_image": "readme-synchronized.webp",
+      "preview_panel": {
+        "row": 1,
+        "column": 0
+      }
+    },
+    "i2v-19": {
+      "video": "i2v-19.mp4",
+      "original_sha256": "1168b4a54e24339d1ddbd48d343ff1e69bb8d1cf8c1dbd5b41de0d78457b1c07",
+      "geometry": {
+        "width": 832,
+        "height": 480,
+        "fps": 16.0,
+        "frames": 248
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "preview_speed": 3,
+      "preview_width": 640,
+      "preview_fps": 30,
+      "preview_frames": 158,
+      "preview_timing": "Shared 5.267-second normalized timeline; first and last source frames included; all panels and progress bars restart together",
+      "preview_format": "animated WebP",
+      "preview_duration": 5.267,
+      "original_geometry": {
+        "width": 832,
+        "height": 480,
+        "fps": 16.0,
+        "frames": 253
+      },
+      "website_scene": "i2v-19",
+      "trim": {
+        "source_departure_frame": 0,
+        "source_revisit_frame": 247,
+        "inclusive": true,
+        "annotation_source": "https://mosaichunk.github.io/viewer/assets/scenes.js"
+      },
+      "departure_frame": 0,
+      "revisit_frame": 247,
+      "video_sha256": "749f11bd80d6b91dd40453462976552801bf2dd141597357b1e13afb5ddb5ca1",
+      "video_duration": 15.5,
+      "preview_image": "readme-synchronized.webp",
+      "preview_panel": {
+        "row": 1,
+        "column": 1
+      }
+    }
+  },
+  "synchronized_preview": {
+    "file": "readme-synchronized.webp",
+    "width": 1296,
+    "height": 930,
+    "fps": 30,
+    "frames": 158,
+    "duration": 5.267,
+    "encoding_quality": 95,
+    "loop": true,
+    "progress_bars": "One per panel; baked in and not seekable",
+    "time_labels": "Elapsed / total source-video seconds below each bar; 3\u00d7 speed shown at right",
+    "clock": "All panels share normalized progress from 0 to 1 and restart as a group",
+    "panels": [
+      {
+        "scene": "t2v-beetle",
+        "video_box": [
+          0,
+          34,
+          640,
+          357
+        ],
+        "progress_box": [
+          0,
+          401,
+          640,
+          8
+        ]
+      },
+      {
+        "scene": "t2v-01",
+        "video_box": [
+          656,
+          34,
+          640,
+          357
+        ],
+        "progress_box": [
+          656,
+          401,
+          640,
+          8
+        ]
+      },
+      {
+        "scene": "i2v-01",
+        "video_box": [
+          0,
+          501,
+          640,
+          369
+        ],
+        "progress_box": [
+          0,
+          880,
+          640,
+          8
+        ]
+      },
+      {
+        "scene": "i2v-19",
+        "video_box": [
+          656,
+          501,
+          640,
+          369
+        ],
+        "progress_box": [
+          656,
+          880,
+          640,
+          8
+        ]
+      }
+    ]
+  }
+}

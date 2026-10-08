@@ -1,0 +1,147 @@
+diff --git a/wan/modules/model_fast.py b/wan/modules/model_fast.py
+index 01a8c82..6f4a303 100644
+--- a/wan/modules/model_fast.py
++++ b/wan/modules/model_fast.py
+@@ -88,6 +88,12 @@ class CausalWanSelfAttention(nn.Module):
+         max_attention_size=1_000_000,
+         frame_seqlen=None,
+         seq_lens_int=None,
++        inject_k=None,
++        inject_v=None,
++        mem_k=None,
++        mem_v=None,
++        mem_fn=None,
++        rope_frame_offset=0,
+     ):
+         r"""
+         Args:
+@@ -98,6 +104,10 @@ class CausalWanSelfAttention(nn.Module):
+                 provided, skips a `.item()` sync on `grid_sizes`.
+             seq_lens_int(int, optional): Accepted for signature parity with
+                 the SP path (sp_attn_forward_causal). Unused here.
++            inject_k/inject_v(Tensor, optional): PRE-RoPE K/V of shape [B, L, dim] to REPLACE the
++                self-computed norm_k(k(x)) / v(x) -- the memory codec's reconstructed KV. Passed as
++                an explicit argument (not a hook) so it is a tracked input under gradient
++                checkpointing. K is still RoPE'd below; V is never RoPE'd. Default None = normal.
+         """
+         del seq_lens_int
+         b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
+@@ -105,16 +115,36 @@ class CausalWanSelfAttention(nn.Module):
+         # query, key, value function
+         def qkv_fn(x):
+             q = self.norm_q(self.q(x)).view(b, s, n, d)
+-            k = self.norm_k(self.k(x)).view(b, s, n, d)
+-            v = self.v(x).view(b, s, n, d)
++            k = (inject_k if inject_k is not None else self.norm_k(self.k(x))).view(b, s, n, d)
++            v = (inject_v if inject_v is not None else self.v(x)).view(b, s, n, d)
+             return q, k, v
+ 
+         q, k, v = qkv_fn(x)
+ 
+         if frame_seqlen is None:
+             frame_seqlen = math.prod(grid_sizes[0][1:]).item()
+-        current_start_frame = current_start // frame_seqlen
++        # rope_frame_offset DECOUPLES the RoPE temporal position from the cache write position: the
++        # current chunk can sit at cache position 0 (tiny cache) while being RoPE'd at a later frame so
++        # that concat'd memory (RoPE'd at earlier frames) is "past" it. current_start still drives the
++        # cache slot; only RoPE shifts. Default 0 = unchanged.
++        current_start_frame = current_start // frame_seqlen + rope_frame_offset
+         roped_query = causal_rope_apply(q, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
++        # ROUTE HERE, NOT OUTSIDE, when the caller asks for it. MoC scores q_i^T phi(K_omega) with the
++        # layer's own query; every arm that composes memory BEFORE the forward has to substitute a
++        # pooled KEY of the previous chunk, because no query exists yet. mem_fn is handed this
++        # layer's query and returns that layer's (mem_k, mem_v), so the substitution is unnecessary.
++        #
++        # PRE-RoPE q, NOT roped_query, and the two are not interchangeable. The descriptors this
++        # routes against are pooled from PRE-RoPE K (store.section_feats hooks self_attn.norm_k,
++        # before causal_rope_apply), because retrieved rows get re-RoPE'd to a new anchor and the
++        # post-RoPE key therefore does not exist until AFTER the routing decision. Scoring a
++        # post-RoPE query against pre-RoPE keys would take an inner product across two different
++        # positional frames -- a rotation applied to one side only. Same side on both.
++        #
++        # Strictly a no-op when mem_fn is None: the branch is not entered, mem_k/mem_v keep whatever
++        # the caller passed, and the frozen path is untouched.
++        if mem_fn is not None:
++            mem_k, mem_v = mem_fn(q)
+         roped_key = causal_rope_apply(k, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
+         current_end = current_start + roped_query.shape[1]
+         sink_tokens = self.sink_size * frame_seqlen
+@@ -156,6 +186,13 @@ class CausalWanSelfAttention(nn.Module):
+ 
+         k_cache = kv_cache["k"][:, max(0, local_end_index - max_attention_size):local_end_index]
+         v_cache = kv_cache["v"][:, max(0, local_end_index - max_attention_size):local_end_index]
++        # STAGE-3 memory: PREPEND retrieved/decoded memory KV as extra context (concat, not replace).
++        # mem_k must already be RoPE'd at its target NEAR positions by the caller; mem_v is verbatim.
++        # Passed as an explicit tensor arg (not a cache write) so gradients flow back into the codec
++        # under gradient checkpointing. Query is unchanged -> memory is purely additive context.
++        if mem_k is not None:
++            k_cache = torch.cat([mem_k.type_as(k_cache), k_cache], dim=1)
++            v_cache = torch.cat([mem_v.type_as(v_cache), v_cache], dim=1)
+         x = attention(roped_query, k_cache, v_cache)
+ 
+         kv_cache["global_end_index"].fill_(current_end)
+@@ -275,6 +312,12 @@ class CausalWanAttentionBlock(nn.Module):
+         frame_seqlen=None,
+         cross_attn_first_call=None,
+         seq_lens_int=None,
++        inject_k=None,
++        inject_v=None,
++        mem_k=None,
++        mem_v=None,
++        mem_fn=None,
++        rope_frame_offset=0,
+     ):
+         r"""
+         Args:
+@@ -282,6 +325,8 @@ class CausalWanAttentionBlock(nn.Module):
+             e(Tensor): Shape [B, F, 6, C]
+             grid_sizes(Tensor): Shape [B, 3], the second dimension contains (F, H, W)
+             freqs(Tensor): Rope freqs, shape [1024, C / num_heads / 2]
++            inject_k/inject_v(Tensor, optional): pre-RoPE K/V to replace this block's self-attn
++                K/V (memory injection); threaded to CausalWanSelfAttention. Default None = normal.
+         """
+         assert e.dtype == torch.float32
+         with torch.amp.autocast('cuda', dtype=torch.float32):
+@@ -291,7 +336,8 @@ class CausalWanAttentionBlock(nn.Module):
+         y = self.self_attn(
+             self.norm1(x).float() * (1 + e[1].squeeze(2)) + e[0].squeeze(2),
+             seq_lens, grid_sizes, freqs, kv_cache, current_start, max_attention_size,
+-            frame_seqlen=frame_seqlen, seq_lens_int=seq_lens_int)
++            frame_seqlen=frame_seqlen, seq_lens_int=seq_lens_int, inject_k=inject_k, inject_v=inject_v,
++            mem_k=mem_k, mem_v=mem_v, mem_fn=mem_fn, rope_frame_offset=rope_frame_offset)
+         with torch.amp.autocast('cuda', dtype=torch.float32):
+             x = x + y * e[2].squeeze(2)
+ 
+@@ -496,6 +542,10 @@ class WanModelFast(ModelMixin, ConfigMixin):
+         max_attention_size=1_000_000,
+         frame_seqlen=None,
+         cross_attn_first_call=None,
++        inject_kv=None,
++        mem_kv=None,
++        mem_fns=None,
++        rope_frame_offset=0,
+     ):
+         r"""
+         Run the diffusion model with kv caching.
+@@ -609,6 +659,7 @@ class WanModelFast(ModelMixin, ConfigMixin):
+             dit_cond_dict=dit_cond_dict,
+             max_attention_size=max_attention_size,
+             frame_seqlen=frame_seqlen,
++            rope_frame_offset=rope_frame_offset,
+             cross_attn_first_call=cross_attn_first_call)
+ 
+         for block_index, block in enumerate(self.blocks):
+@@ -617,6 +668,13 @@ class WanModelFast(ModelMixin, ConfigMixin):
+                     "kv_cache": kv_cache[block_index],
+                     "crossattn_cache": crossattn_cache[block_index],
+                     "current_start": current_start,
++                    "inject_k": inject_kv[block_index]["k"] if (inject_kv is not None and inject_kv[block_index] is not None) else None,
++                    "inject_v": inject_kv[block_index]["v"] if (inject_kv is not None and inject_kv[block_index] is not None) else None,
++                    "mem_k": mem_kv[block_index]["k"] if (mem_kv is not None and mem_kv[block_index] is not None) else None,
++                    "mem_v": mem_kv[block_index]["v"] if (mem_kv is not None and mem_kv[block_index] is not None) else None,
++                    # PER-LAYER ROUTING CALLBACK, already bound to this block's index by the caller.
++                    # Takes precedence over mem_kv when present; both None is the ordinary path.
++                    "mem_fn": mem_fns[block_index] if mem_fns is not None else None,
+                 }
+             )
+             x = block(x, **kwargs)

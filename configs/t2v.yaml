@@ -1,0 +1,236 @@
+entry:
+  module: engines.diffusion_finetuning
+  class_name: DiffusionFinetuning
+logging:
+  plugins:
+  - module: mosaichunk.t2v.logging
+    class_name: LocalMedia
+validation:
+  validate_ema: false
+  seed: 20260830
+  num_frames: 260
+  height: 768
+  width: 1376
+  fps: 24
+  nrow: 4
+  crf: 18
+  save_grid: false
+  prompt_path: ${train_data}/validation_prompts.txt
+  num_prompts: 3
+  segment_file: ${train_data}/train2000_segments.json
+  segment_scene: false
+  batch_size: 1
+engine:
+  seed: 20260831
+  ga_steps: 1
+  clip_grad_norm: 1.0
+  log_interval: 10
+  ema_decay: 0.0
+  up_size:
+    train: 4
+    validation: 4
+  training_steps: 4000
+  save_interval: 52
+  val_interval: 100
+  val_before_train: false
+  save_before_train: false
+  resume: auto
+diffusion:
+  sampling_timesteps:
+    module: common.diffusion.timestep.sampling.trailing
+    class_name: TrailingSamplingTimesteps
+    args:
+      T: 1.0
+      num_sampling_steps: 4
+      shift: 12.0
+  audio_sampling_timesteps:
+    module: common.diffusion.timestep.sampling.trailing
+    class_name: TrailingSamplingTimesteps
+    args:
+      T: 1.0
+      num_sampling_steps: 4
+      shift: 3.0
+  schedule:
+    module: common.diffusion.schedule.lerp
+    class_name: LinearInterpolationSchedule
+    args:
+      T: 1.0
+      pred_type: x_0
+  sampler:
+    module: common.diffusion.sampler.consistency
+    class_name: ConsistencySampler
+    args: {}
+distributed:
+  up_size:
+  - 4
+persistence:
+  proj_name: mosaichunk
+  exp_name: train
+  output_dir: outputs/t2v
+data:
+  module: projects.minimax_h3.data.causal_text_only
+  class_name: CausalTextOnlyT2AVDataset
+  num_workers: 2
+  prefetch_factor: 2
+  pin_memory: true
+  args:
+    tokenizer_path: ${assets}/MiniMax-H3/FL2VA/tokenizer
+    max_seqlen: 82000
+    max_seqlen_per_sample: 82000
+    max_retries: 5
+    paths:
+    - ${train_data}/train2000_scene.txt
+    height: 768
+    width: 1376
+    num_frames: 260
+    video_latent_channels: 24
+    audio_latent_channels: 32
+    spatial_vae_stride: 16
+    sink: 1
+    window_size: 2
+    sync_group_size: 1
+meta_model:
+  module: mosaichunk.t2v.train_meta
+  class_name: PtrTrainMetaModel
+models:
+  backbone:
+    module: projects.minimax_h3.modeling.build
+    class_name: MiniMaxH3CausalX0DiTSP
+    meta_init: true
+    args:
+      __inherit__: projects/minimax_h3/configs/dit.yaml
+    weight:
+      module: projects.minimax_h3.modeling.weights
+      class_name: MiniMaxH3WeightLoader
+      path: ${assets}/MiniMax-H3/FL2VA/transformer/model.safetensors.index.json
+    runtime:
+      training: false
+      requires_grad: false
+      param_dtype: bfloat16
+    placement:
+      weight_dtype: float32
+      fsdp:
+        wrap_modules:
+        - CausalMiniMaxH3DiTBlock
+        param_dtype: null
+        reduce_dtype: float32
+        cast_forward_inputs: false
+        shard_size: 8
+        reshard_after_forward: true
+        cpu_offload: false
+    adapter:
+      r: 128
+      lora_alpha: 128
+      weight: ${assets}/MiniMax-H3-RAVEN-Streaming-LoRA/minimax_h3_raven_streaming_lora_4nfe_preview.safetensors
+      target_modules:
+      - qkv_proj
+      - out_proj
+      - fc1
+      - fc2
+      - linear
+      - condition_proj
+      - video_patch_proj
+      - audio_patch_proj
+      - video_out
+      - audio_out
+      - proj_in
+      - proj_out
+      custom_module_mapping:
+      - source:
+          module: projects.minimax_h3.modeling.transformer.model
+          class_name: _Linear
+        target:
+          module: projects.minimax_h3.modeling.lora
+          class_name: MiniMaxH3LoraLinear
+  text_encoder:
+    module: projects.minimax_h3.modeling.text_encoder
+    class_name: MiniMaxH3TextEncoder
+    instantiate:
+      module: common.model.instantiate
+      class_name: FromPretrainedInstantiate
+    args:
+      pretrained_model_name_or_path: ${assets}/MiniMax-H3/FL2VA/text_encoder
+      hidden_layer: 50
+    runtime:
+      training: false
+      requires_grad: false
+      param_dtype: bfloat16
+    placement:
+      weight_dtype: bfloat16
+      fsdp:
+        wrap_modules:
+        - Qwen3VLTextDecoderLayer
+        - Qwen3VLVisionBlock
+        param_dtype: bfloat16
+        reduce_dtype: float32
+        shard_size: 8
+        cpu_offload: true
+  video_vae:
+    module: projects.minimax_h3.modeling.build
+    class_name: MiniMaxH3VideoVAE
+    meta_init: false
+    args:
+      __inherit__: projects/minimax_h3/configs/video_vae.yaml
+    weight:
+      path: ${assets}/MiniMax-H3/FL2VA/video_vae/source/model.safetensors
+    runtime:
+      training: false
+      requires_grad: false
+      param_dtype: float16
+      plugins:
+      - module: common.plugin.autocast
+        class_name: AutocastNoGradWrapper
+        functions:
+        - decode_base
+        grad_enabled: false
+        autocast:
+          enabled: true
+          dtype: float16
+    placement:
+      weight_dtype: float32
+  audio_vae:
+    module: projects.minimax_h3.modeling.build
+    class_name: MiniMaxH3AudioVAE
+    meta_init: false
+    args:
+      __inherit__: projects/minimax_h3/configs/audio_vae.yaml
+    weight:
+      module: projects.minimax_h3.modeling.weights
+      class_name: MiniMaxH3AudioVAEWeightLoader
+      path: ${assets}/MiniMax-H3/audio_vae/diffusion_pytorch_model.safetensors
+    runtime:
+      training: false
+      requires_grad: false
+      param_dtype: float32
+    placement:
+      weight_dtype: float32
+  selector:
+    module: mosaichunk.t2v.selector
+    class_name: Selector
+    meta_init: false
+    args:
+      d_in: 7168
+      d: 1024
+      tau: 8.0
+    runtime:
+      training: true
+      requires_grad: true
+      param_dtype: float32
+    placement:
+      weight_dtype: float32
+      fsdp:
+        wrap_modules:
+        - Trunk
+        param_dtype: null
+        reduce_dtype: float32
+        cast_forward_inputs: false
+        shard_size: 8
+        cpu_offload: false
+    optimizer:
+    - class_name: AdamW
+      args:
+        lr: 0.0001
+        betas:
+        - 0.9
+        - 0.95
+        weight_decay: 0.01

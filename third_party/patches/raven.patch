@@ -1,0 +1,11 @@
+--- a/common/model/placement.py
++++ b/common/model/placement.py
+@@ -312,7 +312,7 @@
+                 # trial that omits the line is safe rather than quietly wrong.
+                 cast_forward_inputs=config.get("cast_forward_inputs", False),
+             ),
+-            "reshard_after_forward": True,
++            "reshard_after_forward": config.get("reshard_after_forward", True),
+         }
+         if cpu_offload:
+             kwargs["offload_policy"] = CPUOffloadPolicy()
