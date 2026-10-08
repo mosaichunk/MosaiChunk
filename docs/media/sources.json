@@ -1,0 +1,65 @@
+{
+  "teaser": "https://mosaichunk.github.io/assets/figures/teaser.html",
+  "previews": {
+    "t2v-15": {
+      "video": "t2v-15.mp4",
+      "original_sha256": "b2a84ff07ddd514f1f179b8fefa5f2a53bb4447ba2b76103e801a9ef59e8848d",
+      "geometry": {
+        "width": 1376,
+        "height": 768,
+        "fps": 24.0,
+        "frames": 379
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "preview_speed": 3,
+      "preview_width": 768,
+      "preview_fps": 8
+    },
+    "t2v-01": {
+      "video": "t2v-01.mp4",
+      "original_sha256": "817b2583d29bef23dfd2aabfc05cd34302e03cb223f1fbb83f947a34ee7542fd",
+      "geometry": {
+        "width": 1376,
+        "height": 768,
+        "fps": 24.0,
+        "frames": 379
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "preview_speed": 3,
+      "preview_width": 768,
+      "preview_fps": 8
+    },
+    "i2v-01": {
+      "video": "i2v-01.mp4",
+      "original_sha256": "1f642f25e8d3242ef0556e61ffa68b228247d5db15dde457533812d70c7c218c",
+      "geometry": {
+        "width": 832,
+        "height": 480,
+        "fps": 16.0,
+        "frames": 253
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "preview_speed": 3,
+      "preview_width": 768,
+      "preview_fps": 8
+    },
+    "i2v-19": {
+      "video": "i2v-19.mp4",
+      "original_sha256": "1168b4a54e24339d1ddbd48d343ff1e69bb8d1cf8c1dbd5b41de0d78457b1c07",
+      "geometry": {
+        "width": 832,
+        "height": 480,
+        "fps": 16.0,
+        "frames": 253
+      },
+      "method": "MosaiChunk",
+      "far_memory_chunks": 2,
+      "preview_speed": 3,
+      "preview_width": 768,
+      "preview_fps": 8
+    }
+  }
+}

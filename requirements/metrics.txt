@@ -1,0 +1,5 @@
+lpips==0.1.4
+scikit-image==0.26.0
+lazy-loader==0.5
+tifffile==2026.3.3
+plyfile==1.1.3
